@@ -11,14 +11,24 @@ if (Meteor.isClient) {
 
   Template.history.helpers({
     historyItem: function() {
-      var historyItems = [
-        {date: '10/23/2014 5:00 AM', value: 20 },
-        {date: '10/23/2014 6:00 AM', value: 25 },
-        {date: '10/23/2014 7:00 AM', value: 30 },
-        {date: '10/23/2014 8:00 AM', value: 5 },
-        {date: '10/23/2014 9:00 AM', value: 4 }
-      ];
-      return historyItems;
+      
+      return History.find({}, {sort: {date: -1}, limit: 5 });
+    }
+  });
+
+  Template.userDetails.events({
+    'click #addAmount' : function (e) {
+      e.preventDefault()
+
+      var amount = parseInt($('#amount').val());
+
+      Users.update(this._id, { $inc: {total: amount }});
+      
+      History.insert({
+        value: amount,
+        date: new Date().toTimeString(),
+        uerId: this._id
+      });
     }
   });
 }
