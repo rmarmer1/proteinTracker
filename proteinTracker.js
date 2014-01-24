@@ -1,22 +1,34 @@
 
-Users = new Meteor.Collection('users');
+ProteinData = new Meteor.Collection('protein_data');
 History = new Meteor.Collection('history');
 
 if (Meteor.isClient) {
 
-Meteor.subscribe('allUsers');
+Meteor.subscribe('allProteinData');
 Meteor.subscribe('allHistory');
 
   Template.userDetails.helpers({
+
     user: function () {
-      return Users.findOne();
+    
+    var data = ProteinData.findOne();
+
+      if (!data) {
+      
+        data = {
+            userId: Meteor.userId(),
+            total: 0,
+            goal: 200
+        };
+        ProteinData.insert(data);
+      }  
+        return data;
     }
   });
 
   Template.history.helpers({
-    historyItem: function() {
-
-      return History.find({}, {sort: {date: -1}, limit: 5 });
+    historyItem: function () {
+      return History.find({}, {sort: {date: -1}});
     }
   });
 
@@ -26,51 +38,28 @@ Meteor.subscribe('allHistory');
 
       var amount = parseInt($('#amount').val());
 
-      Users.update(this._id, { $inc: {total: amount }});
+      ProteinData.update(this._id, { $inc: {total: amount }});
       
       History.insert({
         value: amount,
         date: new Date().toTimeString(),
-        userId: this._id
+        userId: this.userId
       });
     }
   });
 }
 
 if (Meteor.isServer) {
-
-  Meteor.publish('allUsers', function(){
-    return Users.find();
+ 
+  Meteor.publish('allProteinData', function(){
+    return ProteinData.find({ userId: this.userId });
   });
 
   Meteor.publish('allHistory', function(){
-    return History.find({}, {sort: {date: -1}, limit: 5});
+    return History.find({ userId: this.userId }, {sort: {date: -1}, limit: 5});
   });
 
   Meteor.startup(function () {
-    // code to run on server at startup
-    if (Users.find().count() === 0) {
-      Users.insert({
-        total: 120,
-        goal: 200
-      });
-    }
 
-//    if (History.find().count() === 0) {
-//      History.insert({
-//        value: 50,
-//        date: new Date().toTimeString()
-//      });
-//
-//      History.insert({
-//        value: 30,
-//        date: new Date().toTimeString()
-//      });
-//
-//      History.insert({
-//        value: 20,
-//        date: new Date().toTimeString()
-//      });
- //   }
   });
 }

@@ -1,27 +1,29 @@
 <head>
-  <title>proteinTracker</title>
+  <title>ProteinTracker</title>
 </head>
 
 <body>
   <h1>Protein Tracker</h1>
-  {{> userDetails }}
-  {{> history }}
+  {{loginButtons}}
+  {{#if currentUser }}
+    {{> userDetails}}
+    {{> history}}
+  {{/if}}
 </body>
 
 <template name="userDetails">
   {{#with user}}
-  <h2>Total: <span id="total">{{total}}</span> </h2>
-  <h2>Goal: <span id="goal">{{goal}}</span> </h2>
-  <h3>Enter Amount:</h3>
-  <input type="text" id="amount" />
-  <input id="addAmount" type="submit" value="Add Protein" />
+    <h2>Total: <span>{{total}}</span></h2>
+    <h2>Goal: <span>{{goal}}</span></h2>
+    <h3>Enter amount:</h3>
+    <input id="amount" type="text" />
+    <input id="addAmount" type="submit" value="Add Protein" />
   {{/with}}
 </template>
 
 <template name="history">
-	<h2>Last 5 Entries</h2>
-	{{#each historyItem}}
-		<p>{{date}} - {{value}} </p>
-	{{/each}}
+  <h2>Last 5 Entries</h2>
+  {{#each historyItem}}
+    <p>{{date}} - {{value}}</p>
+  {{/each}}
 </template>
-
