@@ -23,7 +23,8 @@ Meteor.subscribe('allHistory');
         ProteinData.insert(data);
       }  
         return data;
-    }
+    },
+    lastAmount: function() { return Session.get('lastAmount'); }
   });
 
   Template.history.helpers({
@@ -45,6 +46,7 @@ Meteor.subscribe('allHistory');
         date: new Date().toTimeString(),
         userId: this.userId
       });
+      Session.set('lastAmount', amount);
     }
   });
 }
