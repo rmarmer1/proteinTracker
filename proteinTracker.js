@@ -2,6 +2,30 @@
 ProteinData = new Meteor.Collection('protein_data');
 History = new Meteor.Collection('history');
 
+Meteor.methods({
+  addProtein: function(amount) {
+
+        if (!this.isSimulation) {
+            var Future = Npm.require('fibers/future');
+            var future = new Future();
+            Meteor.setTimeout(function () {
+                future.return();
+            }, 3 * 1000);
+            future.wait();
+        } else {
+            amount = 500;
+        }
+    
+    ProteinData.update({userId: this.userId}, { $inc: {total: amount }});
+      
+      History.insert({
+        value: amount,
+        date: new Date().toTimeString(),
+        userId: this.userId
+      });
+    }
+});
+
 if (Meteor.isClient) {
 
 Meteor.subscribe('allProteinData');
@@ -47,12 +71,9 @@ Meteor.subscribe('allHistory');
 
       var amount = parseInt($('#amount').val());
 
-      ProteinData.update(this._id, { $inc: {total: amount }});
-      
-      History.insert({
-        value: amount,
-        date: new Date().toTimeString(),
-        userId: this.userId
+      Meteor.call('addProtein', amount, function(error, id) {
+        if (error)
+          return alert(error.reason);
       });
       Session.set('lastAmount', amount);
     }
