@@ -2,9 +2,25 @@
 ProteinData = new Meteor.Collection('protein_data');
 History = new Meteor.Collection('history');
 
+ProteinData.deny({
+  
+  update: function (userId, data) {
+    if (data.total < 0 )
+      return true;
+    return false;
+  }
+});
+
+
 Meteor.methods({
   addProtein: function(amount) {
-
+// If (while)'isSimulation' is true, the code is running on the client
+// So when running on the server, a 'delay' of 3 seconds on the return will occur
+// Since the code starts out on the client, isSimulation is initially true, and
+// the else path adds 500 to the total, immediately! ... Then the code runs again
+// but this time on the sever, with the delay. The server receives the actual 
+// amount that the user input, correctly saves it to the DB, & updates (corrects)
+// the dom. The delay just slows the whole process down to make sure we can see it! 
         if (!this.isSimulation) {
             var Future = Npm.require('fibers/future');
             var future = new Future();
@@ -15,7 +31,7 @@ Meteor.methods({
         } else {
             amount = 500;
         }
-    
+
     ProteinData.update({userId: this.userId}, { $inc: {total: amount }});
       
       History.insert({
@@ -60,6 +76,7 @@ Meteor.subscribe('allHistory');
   });
 
   Template.history.helpers({
+
     historyItem: function () {
       return History.find({}, {sort: {date: -1}});
     }
@@ -76,8 +93,13 @@ Meteor.subscribe('allHistory');
           return alert(error.reason);
       });
       Session.set('lastAmount', amount);
-    }
-  });
+    },
+
+  'click #quickSubtract': function(e) {
+    e.preventDefault();
+    ProteinData.update(this._id, { $inc: { total: -100 } });
+  }
+ });
 }
 
 if (Meteor.isServer) {
