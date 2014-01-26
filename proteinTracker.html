@@ -6,7 +6,8 @@
   <h1>Protein Tracker!</h1>
   {{loginButtons}}
   {{#if currentUser }}
-    {{> userDetails}}
+  <a href="{{settingsPath}}">Settings</a> 
+    {{renderPage}}
     {{> history}}
   {{/if}}
 </body>
@@ -31,4 +32,15 @@
   {{#each historyItem}}
     <p>{{date}} - {{value}}</p>
   {{/each}}
+</template>
+
+<template name="settings">
+  <h2>Settings</h2>
+  {{#with userGoal}}
+  <h3>Current Goal: <span>{{goal}}</span></h3>
+ 
+      <input id="setGoalAmount" type="text">
+      <input id="resetGoal" type="Submit" value="Reset Goal">
+ {{/with}}
+<a href="{{userDetailsPath}}">Back</a>
 </template>

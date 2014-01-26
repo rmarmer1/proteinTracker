@@ -2,15 +2,20 @@
 ProteinData = new Meteor.Collection('protein_data');
 History = new Meteor.Collection('history');
 
-ProteinData.deny({
+ProteinData.allow({
   
   update: function (userId, data) {
     if (data.total < 0 )
       return true;
     return false;
+  },
+
+  insert: function (userId, data) {
+    if (data.userId == userId < 0 )
+      return true;
+    return false;
   }
 });
-
 
 Meteor.methods({
   addProtein: function(amount) {
@@ -22,12 +27,16 @@ Meteor.methods({
 // amount that the user input, correctly saves it to the DB, & updates (corrects)
 // the dom. The delay just slows the whole process down to make sure we can see it! 
         if (!this.isSimulation) {
-            var Future = Npm.require('fibers/future');
-            var future = new Future();
-            Meteor.setTimeout(function () {
-                future.return();
-            }, 3 * 1000);
-            future.wait();
+// Can't use parts of the below code in production, so will comment them out
+// Will leave the 'amount = 500' code at 1st, however, just to √ if we run into 
+// latency problems when the app is deployed to a production sever..
+
+//            var Future = Npm.require('fibers/future');
+//            var future = new Future();
+//            Meteor.setTimeout(function () {
+//                future.return();
+//            }, 3 * 1000);
+//            future.wait();
         } else {
             amount = 500;
         }
@@ -39,10 +48,26 @@ Meteor.methods({
         date: new Date().toTimeString(),
         userId: this.userId
       });
-    }
+    },
+
+    resetGoal: function(setGoalAmount){
+      console.log('setGoalAmount is: ' + setGoalAmount);
+      console.log('this.userId is: ' + this.userId);
+      console.log('Meteor.userId() is: ' + Meteor.userId());
+      ProteinData.update({userId: this.userId}, {$set: {goal: setGoalAmount }});
+    },
+
+    decrementBy100: function(){
+      ProteinData.update(this._id, { $inc: { total: -100 } });
+    } 
 });
 
 if (Meteor.isClient) {
+
+Meteor.Router.add({
+  '/': 'userDetails',
+  '/settings': 'settings'
+})
 
 Meteor.subscribe('allProteinData');
 Meteor.subscribe('allHistory');
@@ -95,11 +120,51 @@ Meteor.subscribe('allHistory');
       Session.set('lastAmount', amount);
     },
 
-  'click #quickSubtract': function(e) {
-    e.preventDefault();
-    ProteinData.update(this._id, { $inc: { total: -100 } });
-  }
+    'click #quickSubtract': function(e) {
+      e.preventDefault();
+
+      Meteor.call('decrementBy100', function(error, id) {
+        if (error)
+          return alert(error.reason);
+      });
+    }
+});
+
+ Template.settings.helpers({
+
+    userGoal: function () {
+        
+        var data = ProteinData.findOne();
+    
+          if (!data) {
+          
+            data = {
+                userId: Meteor.userId(),
+                total: 0,
+                goal: 200
+            };
+            ProteinData.insert(data);
+          }  
+            return data;
+    }
+  });
+
+  Template.settings.events({
+    'click #resetGoal': function(e) {
+      e.preventDefault();
+
+      var setGoalAmount = parseInt($('#setGoalAmount').val());
+//      console.log('setGoalAmount is: ' + setGoalAmount);
+//      console.log('this.userId is: ' + this.userId);
+//     Meteor.call('resetGoal', setGoalAmount, function(error, id) {
+//       if (error)
+//       return alert(error.reason);
+
+    ProteinData.update(this._Id, {$set: {'goal': 'setGoalAmount'}} );
+//    Task.update(this._id, { $set: {'status': 'doing'}});
+  } 
  });
+
 }
 
 if (Meteor.isServer) {
